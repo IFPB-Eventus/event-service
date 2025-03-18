@@ -25,7 +25,7 @@ public class ActivityRegistrationService {
         this.activityRepository = activityRepository;
     }
 
-    public ActivityRegistration registerUserToActivity(String userId, Long activityId) {
+    public ActivityRegistration registerUserToActivity(String userId, Long activityId, String userName) {
         // Verifica se a atividade existe
         Activity activity = activityRepository.findById(activityId)
                 .orElseThrow(() -> new RuntimeException("Atividade não encontrada!"));
@@ -47,7 +47,7 @@ public class ActivityRegistrationService {
         }
 
         // Criar a inscrição na atividade
-        ActivityRegistration registration = new ActivityRegistration(userId, activity);
+        ActivityRegistration registration = new ActivityRegistration(userId, activity, userName);
         return activityRegistrationRepository.save(registration);
     }
 }

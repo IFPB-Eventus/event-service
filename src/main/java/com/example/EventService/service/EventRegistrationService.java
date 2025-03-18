@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EventRegistrationService {
@@ -20,29 +21,55 @@ public class EventRegistrationService {
         this.eventRepository = eventRepository;
     }
 
-    public EventRegistration registerUserToEvent(String userId, Long eventId) {
+    public EventRegistration registerUserToEvent(String userId, String userName, Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado!"));
 
-        // Verificar se o evento atingiu o limite de inscrições
-        if (event.getRegistrations().size() >= event.getMaxRegistrations()) {
+        long activeRegistrations = event.getRegistrations().stream()
+                .filter(EventRegistration::isRegistered)
+                .count();
+
+        if (activeRegistrations >= event.getMaxRegistrations()) {
             throw new RuntimeException("Evento está lotado!");
         }
 
-        // Verificar se o usuário já está inscrito
-        boolean alreadyRegistered = event.getRegistrations().stream()
-                .anyMatch(reg -> reg.getUserId().equals(userId));
+        Optional<EventRegistration> existingRegistration = event.getRegistrations().stream()
+                .filter(reg -> reg.getUserId().equals(userId))
+                .findFirst();
 
-        if (alreadyRegistered) {
-            throw new RuntimeException("Usuário já inscrito neste evento!");
+        if (existingRegistration.isPresent()) {
+            EventRegistration registration = existingRegistration.get();
+
+            if (registration.isRegistered()) {
+                throw new RuntimeException("Usuário já inscrito neste evento!");
+            }
+
+            registration.setRegistered(true);
+            return eventRegistrationRepository.save(registration);
         }
 
-        // Criar inscrição
-        EventRegistration registration = new EventRegistration();
-        registration.setUserId(userId);
-        registration.setEvent(event);
+        EventRegistration newRegistration = new EventRegistration();
+        newRegistration.setUserId(userId);
+        newRegistration.setUserName(userName);
+        newRegistration.setEvent(event);
+        newRegistration.setRegistered(true);
 
-        return eventRegistrationRepository.save(registration);
+        return eventRegistrationRepository.save(newRegistration);
+    }
+
+    public void unregisterUserFromEvent(String userId, Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado!"));
+
+        EventRegistration registration = event.getRegistrations().stream()
+                .filter(reg -> reg.getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Usuário não está inscrito neste evento!"));
+
+        event.getRegistrations().remove(registration);
+        eventRepository.save(event);
+
+        eventRegistrationRepository.delete(registration);
     }
 
     public List<EventRegistration> getAllEventRegistrations() {
@@ -55,5 +82,12 @@ public class EventRegistrationService {
 
     public void deleteEventRegistration(Long id) {
         eventRegistrationRepository.deleteById(id);
+    }
+
+    public List<Event> getUserRegisteredEvents(String userId) {
+        return eventRegistrationRepository.findByUserId(userId)
+                .stream()
+                .map(EventRegistration::getEvent)
+                .collect(Collectors.toList());
     }
 }

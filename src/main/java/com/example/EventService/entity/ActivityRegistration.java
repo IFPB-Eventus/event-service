@@ -14,6 +14,9 @@ public class ActivityRegistration {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Column(name = "user_name", nullable = false)
+    private String userName;
+
     @ManyToOne
     @JoinColumn(name = "activity_id", nullable = false)
     @JsonIgnore
@@ -21,9 +24,10 @@ public class ActivityRegistration {
 
     public ActivityRegistration() {}
 
-    public ActivityRegistration(String userId, Activity activity) {
+    public ActivityRegistration(String userId, Activity activity , String userName) {
         this.userId = userId;
         this.activity = activity;
+        this.userName = userName;
     }
 
     public Long getId() {
@@ -47,5 +51,13 @@ public class ActivityRegistration {
 
     public void setActivity(Activity activity) {
         this.activity = activity;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }

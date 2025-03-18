@@ -18,6 +18,24 @@ public class Activity {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private String location;
+
+    @Column(nullable = false)
+    private String activityDate;
+
+    @Column(nullable = false)
+    private String activityTime;
+
+    @Column(nullable = false)
+    private String type;
+
+    @Column(nullable = false)
+    private String category;
+
+    @Column
+    private String photo;
+
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
     @JsonIgnore
@@ -40,6 +58,54 @@ public class Activity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getActivityDate() {
+        return activityDate;
+    }
+
+    public void setActivityDate(String activityDate) {
+        this.activityDate = activityDate;
+    }
+
+    public String getActivityTime() {
+        return activityTime;
+    }
+
+    public void setActivityTime(String activityTime) {
+        this.activityTime = activityTime;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 
     public Event getEvent() {

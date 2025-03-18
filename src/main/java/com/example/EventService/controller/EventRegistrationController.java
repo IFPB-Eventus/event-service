@@ -1,10 +1,12 @@
 package com.example.EventService.controller;
 
+import com.example.EventService.entity.Event;
 import com.example.EventService.entity.EventRegistration;
 import com.example.EventService.service.EventRegistrationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +23,12 @@ public class EventRegistrationController {
 
     @PostMapping("/{eventId}/register")
     public ResponseEntity<EventRegistration> registerUserToEvent(@PathVariable Long eventId, Authentication authentication) {
-        String userId = authentication.getName(); // Obtém ID do usuário autenticado
-        EventRegistration createdRegistration = eventRegistrationService.registerUserToEvent(userId, eventId);
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+
+        String userId = jwt.getSubject(); // Obtém o ID do usuário
+        String userName = jwt.getClaimAsString("preferred_username"); // Obtém o nome do usuário
+
+        EventRegistration createdRegistration = eventRegistrationService.registerUserToEvent(userId, userName, eventId);
         return ResponseEntity.ok(createdRegistration);
     }
 
@@ -40,9 +46,21 @@ public class EventRegistrationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEventRegistration(@PathVariable Long id) {
-        eventRegistrationService.deleteEventRegistration(id);
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> unregisterUserFromEvent(@PathVariable Long eventId, Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userId = jwt.getSubject();
+
+        eventRegistrationService.unregisterUserFromEvent(userId, eventId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/my-events")
+    public ResponseEntity<List<Event>> getUserRegisteredEvents(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userId = jwt.getSubject();
+
+        List<Event> events = eventRegistrationService.getUserRegisteredEvents(userId);
+        return ResponseEntity.ok(events);
     }
 }
